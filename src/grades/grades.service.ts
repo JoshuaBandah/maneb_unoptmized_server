@@ -4,10 +4,12 @@ import { StudentMarksDto } from './dto/studentsMarks.dto';
 import { gradeReultsRequest } from './dto/gradeReultsRequest.dto';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class GradesService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) { }
+  constructor(private readonly redis: RedisService) { }
+
 
   async createGradesFromFile(data: StudentMarksDto[]) {
     if (!data || data.length === 0) {
@@ -321,25 +323,25 @@ export class GradesService {
     const cacheKey = `student:${student_number}:${date_of_birth}`;
 
     try {
-      //Use cacheManager
-      const cached = await this.cacheManager.get<StudentMarksDto>(cacheKey);
+      const val = await this.redis.get('debug_key');
+      const cached = await this.redis.get<StudentMarksDto>(cacheKey);
+
+
       if (cached) {
-        console.log('Returning cached result for', cacheKey);
         return cached;
       }
-
-
       const results = await sql`
-        SELECT * FROM grades
-        WHERE date_of_birth = ${date_of_birth} 
-          AND student_number = ${student_number}
-        LIMIT 1;
-      `;
+      SELECT * FROM grades
+      WHERE date_of_birth = ${date_of_birth} 
+        AND student_number = ${student_number}
+      LIMIT 1;
+    `;
 
       if (!results || results.length === 0) {
-        throw new BadRequestException('No results found for the provided student number and date of birth');
+        throw new BadRequestException(
+          'No results found for the provided student number and date of birth',
+        );
       }
-
 
       const result = results[0];
       const response: StudentMarksDto = {
@@ -367,22 +369,23 @@ export class GradesService {
         technical_drawing: result.technical_drawing,
       };
 
-      // Cache the result using cacheManager
-      await this.cacheManager.set(cacheKey, response);
+      await this.redis.set(cacheKey, response, 60);
 
       return response;
     } catch (error) {
 
       if (error instanceof BadRequestException) throw error;
 
-      throw new InternalServerErrorException('Failed to retrieve student results');
+      throw new InternalServerErrorException(
+        'Failed to retrieve student results',
+      );
     }
   }
 
   // Optional: clear Redis cache after a new upload
   async clearCache(student_number: string, date_of_birth: string) {
     const key = `student:${student_number}:${date_of_birth}`;
-    await this.cacheManager.del(key);
+    await this.redis.del(key);
   }
 }
 

@@ -10,16 +10,16 @@ import { GradesModule } from './grades/grades.module';
 import { makeCounterProvider, PrometheusModule } from "@willsoto/nestjs-prometheus";
 import { MetricsInterceptor } from './metrics/metricsInterceptor';
 import { CacheModule } from '@nestjs/cache-manager';
-
+import * as redisStore from 'ioredis' ;
 @Module({
   imports: [
-    
-    CacheModule.register({
-      store: 'memory',
-      ttl: 60 *1000,
-      max: 100,
-      isGlobal: true,
-    }),
+//     CacheModule.register({
+//   store: redisStore as any,
+//   host: '127.0.0.1',
+//   port: 6379,
+//   ttl: 60, // seconds (IMPORTANT: not milliseconds)
+//   isGlobal: true,
+// }),
     AuthenticationModule, UserModule, GradesModule,
     PrometheusModule.register({
       path: "/metrics",
