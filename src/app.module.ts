@@ -9,16 +9,25 @@ import { AuthGuard } from './authentication/auth.guard';
 import { GradesModule } from './grades/grades.module';
 import { makeCounterProvider, PrometheusModule } from "@willsoto/nestjs-prometheus";
 import { MetricsInterceptor } from './metrics/metricsInterceptor';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
-  imports: [AuthenticationModule, UserModule, GradesModule,
+  imports: [
+    
+    CacheModule.register({
+      store: 'memory',
+      ttl: 60 *1000,
+      max: 100,
+      isGlobal: true,
+    }),
+    AuthenticationModule, UserModule, GradesModule,
     PrometheusModule.register({
       path: "/metrics",
       defaultMetrics: {
         enabled: true,
-        config:{}
+        config: {}
       },
-    })
+    }),
   ],
   controllers: [AppController],
   providers: [
@@ -35,7 +44,7 @@ import { MetricsInterceptor } from './metrics/metricsInterceptor';
       labelNames: ['method', 'route', 'status'],
     }),
     MetricsInterceptor,
-        // Register MetricsInterceptor globally
+    // Register MetricsInterceptor globally
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,

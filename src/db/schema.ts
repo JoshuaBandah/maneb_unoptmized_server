@@ -40,3 +40,19 @@ export async function createTables() {
   );
   `;
 }
+
+
+  // await sql`
+  // CREATE TABLE IF NOT EXISTS results (
+  //   id SERIAL PRIMARY KEY,
+  //   first_name VARCHAR(50) NOT NULL,
+  //   middle_name  VARCHAR(50),
+  //   last_name  VARCHAR(100) NOT NULL,
+  //   date_of_birth DATE NOT NULL,
+  //   student_number VARCHAR(50) UNIQUE NOT NULL,
+  //   exam_center VARCHAR(100),
+  //   subject VARCHAR(50) NOT NULL,
+  //   marks VARCHAR(3)
+  //   UNIQUE (subject,student_number);
+  // );
+  // `;

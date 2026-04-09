@@ -6,7 +6,7 @@ import { InjectMetric } from '@willsoto/nestjs-prometheus';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
-  private readonly excludedPaths = ['/metrics', '/health']; // paths to skip
+  private readonly excludedPaths = ['/metrics', '/health','authentication/login','authentication/','user/register']; // paths to skip
 
   constructor(
     @InjectMetric('http_requests_total')

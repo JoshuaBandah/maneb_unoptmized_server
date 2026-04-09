@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, InternalServerErrorException, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, InternalServerErrorException, Req, BadRequestException, Query } from '@nestjs/common';
 import { GradesService } from './grades.service';
 import { CreateGradeDto } from './dto/create-grade.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as XLSX from 'xlsx';
 import { StudentMarksDto } from './dto/studentsMarks.dto';
 import { gradeReultsRequest } from './dto/gradeReultsRequest.dto';
+import { Public } from '../common/decorators/public.decorator';
+import { query } from 'winston';
 @Controller('grades')
 export class GradesController {
   constructor(private readonly gradesService: GradesService) { }
@@ -16,11 +18,11 @@ export class GradesController {
       if (!file) {
         throw new BadRequestException('No file uploaded');
       }
-    const workbook = XLSX.read(file.buffer, { 
-      type: 'buffer',
-      cellDates: true,
-      dateNF: 'yyyy-mm-dd'
-    });
+      const workbook = XLSX.read(file.buffer, {
+        type: 'buffer',
+        cellDates: true,
+        dateNF: 'yyyy-mm-dd'
+      });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
 
@@ -45,10 +47,39 @@ export class GradesController {
     }
   }
 
-  @Post('view-results')
-  async viewResults(@Body() request: gradeReultsRequest) {
+  @Public()
+  @Get('view-cached-results')
+  async viewCachedResults(@Query() query: gradeReultsRequest) {
     try {
-      const result = await this.gradesService.viewResults(request);
+
+      const result = await this.gradesService.viewCachedResults(query);
+
+      return {
+        success: true,
+        message: 'Results retrieved successfully',
+        data: result
+      };
+    } catch (error) {
+      console.error('View results error:', error);
+
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException({
+        success: false,
+        message: 'Failed to retrieve results',
+      });
+    }
+  }
+
+
+  @Public()
+  @Get('view-uncached-results')
+  async viewUnCachedResults(@Query() query: gradeReultsRequest) {
+    try {
+
+      const result = await this.gradesService.viewUncachedResults(query);
 
       return {
         success: true,
