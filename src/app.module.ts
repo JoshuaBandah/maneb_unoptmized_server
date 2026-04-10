@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {  Reflector } from '@nestjs/core'; // ← Import Reflector
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthenticationModule } from './authentication/authentication.module';
@@ -7,20 +7,15 @@ import { JwtService } from '@nestjs/jwt';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './authentication/auth.guard';
 import { GradesModule } from './grades/grades.module';
-import { makeCounterProvider, PrometheusModule } from "@willsoto/nestjs-prometheus";
+import { makeCounterProvider, makeHistogramProvider, PrometheusModule } from "@willsoto/nestjs-prometheus";
 import { MetricsInterceptor } from './metrics/metricsInterceptor';
-import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'ioredis' ;
+import { Module } from '@nestjs/common';
+
 @Module({
   imports: [
-//     CacheModule.register({
-//   store: redisStore as any,
-//   host: '127.0.0.1',
-//   port: 6379,
-//   ttl: 60, // seconds (IMPORTANT: not milliseconds)
-//   isGlobal: true,
-// }),
-    AuthenticationModule, UserModule, GradesModule,
+    AuthenticationModule, 
+    UserModule, 
+    GradesModule,
     PrometheusModule.register({
       path: "/metrics",
       defaultMetrics: {
@@ -33,22 +28,33 @@ import * as redisStore from 'ioredis' ;
   providers: [
     AppService,
     JwtService,
+    Reflector,  // ← ADD THIS LINE
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    //metric
+    // metric providers
     makeCounterProvider({
       name: 'http_requests_total',
       help: 'Total number of HTTP requests',
       labelNames: ['method', 'route', 'status'],
     }),
+    makeCounterProvider({
+      name: 'http_requests_failed_total',
+      help: 'Total number of failed HTTP requests',
+      labelNames: ['method', 'route', 'status'],
+    }),
+    makeHistogramProvider({
+      name: 'http_request_duration_seconds',
+      help: 'Duration of HTTP requests in seconds',
+      labelNames: ['method', 'route', 'status'],
+      buckets: [0.1, 0.3, 0.5, 1, 2, 5],
+    }),
     MetricsInterceptor,
-    // Register MetricsInterceptor globally
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: MetricsInterceptor,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: MetricsInterceptor,
+    // },
   ],
 })
 export class AppModule { }
