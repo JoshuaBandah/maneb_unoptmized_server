@@ -10,7 +10,8 @@ import { GradesModule } from './grades/grades.module';
 import { makeCounterProvider, makeHistogramProvider, PrometheusModule } from "@willsoto/nestjs-prometheus";
 import { MetricsInterceptor } from './metrics/metricsInterceptor';
 import { Module } from '@nestjs/common';
-
+import { BullModule } from '@nestjs/bull';
+import { QueueModule } from './queue/queue.module';
 @Module({
   imports: [
     AuthenticationModule, 
@@ -23,6 +24,30 @@ import { Module } from '@nestjs/common';
         config: {}
       },
     }),
+
+    
+    //bull config
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    BullModule.registerQueue({
+      name: 'results-queue',
+      limiter: {
+        max: 100,        // Max 100 jobs per
+        duration: 1000,  // 1 second
+      },
+      defaultJobOptions: {
+        attempts: 3,           // Retry failed jobs 3 times
+        backoff: 5000,        // Wait 5 seconds between retries
+        timeout: 30000,       // 30 second job timeout
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    }),
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [
@@ -55,6 +80,7 @@ import { Module } from '@nestjs/common';
     //   provide: APP_INTERCEPTOR,
     //   useClass: MetricsInterceptor,
     // },
+
   ],
 })
 export class AppModule { }

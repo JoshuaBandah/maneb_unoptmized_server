@@ -48,8 +48,6 @@ export class MetricsInterceptor implements NestInterceptor {
       path = controllerPath + handlerPath;
     }
 
-    let i = 0;
-    console.log('check ', i)
     // Fallback to URL only as last resort
     if (!path) {
       path = request.url.split('?')[0]; // Remove query params

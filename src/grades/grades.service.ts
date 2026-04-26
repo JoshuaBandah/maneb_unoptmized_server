@@ -257,7 +257,7 @@ export class GradesService {
   async viewUncachedResults(data: gradeReultsRequest): Promise<StudentMarksDto> {
     try {
       const { date_of_birth, student_number } = data;
-
+      console.log('yoo',date_of_birth)
       if (!date_of_birth || !student_number) {
         throw new BadRequestException('Date of birth and student number are required');
       }
