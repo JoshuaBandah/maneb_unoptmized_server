@@ -17,8 +17,13 @@ import { GradesModule } from '../grades/grades.module';
                 attempts: 3,           // Retry failed jobs 3 times
                 backoff: 5000,        // Wait 5 seconds between retries
                 timeout: 30000,       // 30 second job timeout
-                removeOnComplete: true,
-                removeOnFail: false,
+                removeOnComplete: {
+                    age: 3600, // keep for 1 hour
+                },
+
+                removeOnFail: {
+                    age: 3600, // keep failed jobs for 24 hours
+                },
             },
         }),
         forwardRef(() => GradesModule),

@@ -24,9 +24,6 @@ import { QueueModule } from './queue/queue.module';
         config: {}
       },
     }),
-
-    
-    //bull config
     BullModule.forRoot({
       redis: {
         host: 'localhost',

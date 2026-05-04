@@ -10,7 +10,7 @@ import { RedisModule } from '../redis/redis.module';
   imports: [
     RedisModule,
     forwardRef(() => QueueModule),
-    QueueModule
+    // QueueModule
   ],
   controllers: [GradesController],
   providers: [GradesService, RedisService],

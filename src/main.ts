@@ -9,7 +9,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(app.get(MetricsInterceptor));
   // Enable validation globally
     app.enableCors({
-    origin: 'http://localhost:3003',
+    origin: 'http://localhost:3002',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
