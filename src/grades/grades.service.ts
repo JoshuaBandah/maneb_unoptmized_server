@@ -24,7 +24,6 @@ export class GradesService {
       return await sql.begin(async (sql) => {
         for (const [index, row] of data.entries()) {
           try {
-            // console.log(`Processing row ${index + 1}:`, row);
 
             const {
               accounting,
@@ -257,7 +256,6 @@ export class GradesService {
   async viewUncachedResults(data: gradeReultsRequest): Promise<StudentMarksDto> {
     try {
       const { date_of_birth, student_number } = data;
-      console.log('yoo',date_of_birth)
       if (!date_of_birth || !student_number) {
         throw new BadRequestException('Date of birth and student number are required');
       }
@@ -301,8 +299,6 @@ export class GradesService {
         technical_drawing: result.technical_drawing
       };
     } catch (error) {
-      console.error('Error viewing results:', error);
-
       if (error instanceof BadRequestException) {
         throw error;
       }

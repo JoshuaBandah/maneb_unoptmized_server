@@ -12,7 +12,6 @@ export class ResultsQueueProcessor {
   async handleResult(job: Job) {
     const { student_number, date_of_birth } = job.data as gradeReultsRequest;
     
-    console.log(`Processing job ${job.id} for student ${student_number} student ${student_number}`);
     
     // Validate required fields
     if (!student_number || !date_of_birth) {
@@ -30,7 +29,6 @@ export class ResultsQueueProcessor {
       // Update job progress
       await job.progress(100);
       
-      console.log(`Job ${job.id} completed successfully`);
       
       return { 
         success: true, 
@@ -38,7 +36,6 @@ export class ResultsQueueProcessor {
         processedAt: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`Job ${job.id} failed:`, error);
       // Log error and let Bull retry
       throw error;
     }

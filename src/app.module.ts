@@ -33,15 +33,15 @@ import { QueueModule } from './queue/queue.module';
     BullModule.registerQueue({
       name: 'results-queue',
       limiter: {
-        max: 100,        // Max 100 jobs per
+        max: 200,
         duration: 1000,  // 1 second
       },
       defaultJobOptions: {
-        attempts: 3,           // Retry failed jobs 3 times
-        backoff: 5000,        // Wait 5 seconds between retries
-        timeout: 30000,       // 30 second job timeout
-        removeOnComplete: true,
-        removeOnFail: false,
+        attempts: 2,           // Retry failed jobs 3 times
+        backoff: 6000,        // Wait 1 second between retries
+        timeout: 60000,       // 60 second job timeout
+        removeOnComplete: 1000,// keep latest 1000 completed jobs
+        removeOnFail: 100, // keep latest 100 failed jobs
       },
     }),
     QueueModule,
@@ -50,7 +50,7 @@ import { QueueModule } from './queue/queue.module';
   providers: [
     AppService,
     JwtService,
-    Reflector,  // ← ADD THIS LINE
+    Reflector,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
