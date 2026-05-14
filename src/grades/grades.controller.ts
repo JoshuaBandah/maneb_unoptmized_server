@@ -78,7 +78,7 @@ export class GradesController {
   // New endpoint with queue support (non-blocking)
   // grades/grades.controller.ts
   @Public()
-  @Get('view-uncached-results')
+  @Get('view-cached-results-que')
   async viewUncachedResultsWithQueue(
     @Query() query: gradeReultsRequest,
     @Res() res: express.Response,

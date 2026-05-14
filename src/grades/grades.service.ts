@@ -386,11 +386,6 @@ export class GradesService {
 }
 
 
-// import { ConflictException, Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
-// import { sql } from '../db/db';
-// import { StudentMarksDto } from './dto/studentsMarks.dto';
-// import { gradeReultsRequest } from './dto/gradeReultsRequest.dto';
-// import { gradesDto } from './dto/grades.dto';
 
 // Define the error type
 type ErrorEntry = {
