@@ -13,7 +13,7 @@ import express from 'express';
 @Controller('grades')
 export class GradesController {
   constructor(private readonly gradesService: GradesService, private readonly queueProducer: ResultsQueueProducer) { }
-
+  private num:number=1;
   @Post('upload-grades')
   @UseInterceptors(FileInterceptor('grades'))
   async uploadExcel(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
@@ -83,6 +83,8 @@ export class GradesController {
     @Query() query: gradeReultsRequest,
     @Res() res: express.Response,
   ) {
+    console.log(this.num);
+    this.num=this.num+1;
     try {
       const { jobId, queued, position } = await this.queueProducer.addToQueue(
         query.student_number,
@@ -101,9 +103,7 @@ export class GradesController {
         },
       });
     } catch (error) {
-      // Fix: Check error type before accessing message
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
       if (errorMessage === 'Queue full - try again later') {
         res.status(503).json({
           success: false,
@@ -124,6 +124,8 @@ export class GradesController {
   @Public()
   @Get('queue/status/:jobId')
   async getJobStatus(@Param('jobId') jobId: string) {
+    
+    // console.log(`Worker ${process.pid} handled request`);
     const job = await this.queueProducer.getJob(jobId);
 
     if (!job) {
@@ -180,5 +182,13 @@ export class GradesController {
     }
   }
 
-
+  @Public()
+  @Post('pre-cache-results')
+  async preCacheResults() {
+    try {
+      await this.gradesService.preLoadResultsFromDbToCache()
+    } catch (error) {
+      console.error(error)
+    }
+  }
 }

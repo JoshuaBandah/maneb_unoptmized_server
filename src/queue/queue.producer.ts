@@ -19,7 +19,6 @@ export class ResultsQueueProducer {
     student_number: string,
     date_of_birth: string,
   ): Promise<QueueResponse> {
-
     const job = await this.resultsQueue.add(
       'process-result',
       {

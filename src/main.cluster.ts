@@ -1,19 +1,27 @@
-import cluster from 'cluster';
-import os from 'os';
+import  cluster from 'cluster';
+import * as os from 'os';
+import { Injectable } from '@nestjs/common';
 
-if (cluster.isPrimary) {
-  const cpus = os.cpus().length;
+const numCPUs = os.cpus().length;
 
-  console.log(`Master running. Forking ${cpus} workers...`);
-
-  for (let i = 0; i < cpus; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', (worker) => {
-    console.log(`Worker ${worker.process.pid} died. Restarting...`);
-    cluster.fork();
-  });
-} else {
-  require('./main');
+@Injectable()
+export class AppClusterService {
+    static clusterize(callback: Function): void {
+        if(cluster.isPrimary){
+            console.log(`Master server started on ${process.pid}`);
+            console.log('CPUs:', os.cpus().length);
+            for (let i = 0; i < numCPUs; i++) {
+                cluster.fork();
+            }
+            cluster.on('exit', (worker, code, signal) => {
+                console.log(`Worker ${worker.process.pid} died. Restarting`);
+                cluster.fork();
+            })
+        } else {
+            console.log(`Cluster server started on ${process.pid}`)
+            callback();
+        }
+    }
 }
+
+

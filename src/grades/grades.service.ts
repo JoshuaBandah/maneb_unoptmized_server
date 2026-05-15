@@ -10,7 +10,6 @@ import { RedisService } from '../redis/redis.service';
 export class GradesService {
   constructor(private readonly redis: RedisService) { }
 
-  private num:number=1;
   async createGradesFromFile(data: StudentMarksDto[]) {
     if (!data || data.length === 0) {
       throw new BadRequestException('No data provided');
@@ -107,7 +106,6 @@ export class GradesService {
               );
             `;
 
-            console.log(`Record created for student: ${first_name} ${last_name} (Row ${index + 1})`);
             successCount++;
 
           }
@@ -144,114 +142,7 @@ export class GradesService {
   }
 
 
-  // async generateGradesFromFile(data: StudentMarksDto[]) {
-  //   if (!data || data.length === 0) {
-  //     throw new BadRequestException('No data provided');
-  //   }
 
-  //   let successCount = 0;
-  //   let errorCount = 0;
-  //   const errors: ErrorEntry[] = [];
-
-  //   try {
-  //     return await sql.begin(async (sql) => {
-  //       for (const [index, row] of data.entries()) {
-
-
-  //         try {
-  //           console.log(`Processing row ${index + 1}:`, row);
-  //           const {
-  //             first_name,
-  //             last_name,
-  //             middle_name,
-  //             date_of_birth,
-  //             exam_center,
-  //             Subject,
-  //             marks,
-  //             student_number
-  //           } = row;
-
-  //           const requiredFields = {
-  //             first_name, last_name, date_of_birth,
-  //             Subject,
-  //             marks,
-  //             exam_center,
-  //             student_number
-  //           };
-
-  //           const missingFields = Object.entries(requiredFields)
-  //             .filter(([_, value]) => value === undefined || value === null || value === '')
-  //             .map(([key]) => key);
-
-  //           if (missingFields.length > 0) {
-  //             console.warn(`Skipping row ${index + 1} due to missing fields:`, missingFields);
-  //             errorCount++;
-  //             errors.push({ row: index + 1, missing: missingFields });
-  //             continue;
-  //           }
-
-  //           const numericFields = {
-  //        marks
-  //           };
-
-  //           const invalidValues = Object.entries(numericFields)
-  //             .filter(([_, value]) => typeof value === 'number' && (value < 0 || value > 100))
-  //             .map(([key]) => key);
-
-  //           if (invalidValues.length > 0) {
-  //             console.warn(`Skipping row ${index + 1} due to invalid marks (0-100 range):`, invalidValues);
-  //             errorCount++;
-  //             errors.push({ row: index + 1, invalidMarks: invalidValues });
-  //             continue;
-  //           }
-
-  //           // Insert into student_marks table
-  //           await sql`
-  //             INSERT INTO grades (
-  //               first_name,
-  //               last_name, middle_name,date_of_birth,exam_center,student_number,Subject,
-  //               marks,
-  //             ) VALUES (
-  //               ${first_name},${last_name}, ${middle_name || null}, ${date_of_birth},${exam_center},
-  //                ${student_number}, ${Subject}, ${marks}
-  //             );
-  //           `;
-
-  //           console.log(`Record created for student: ${first_name} ${last_name} (Row ${index + 1})`);
-  //           successCount++;
-
-  //         }
-  //         catch (rowError) {
-  //           console.error(`Error processing row ${index + 1}:`, rowError);
-  //           errorCount++;
-  //           errors.push({
-  //             row: index + 1,
-  //             error: (rowError as Error).message || 'Unknown error processing row'
-  //           });
-  //           continue;
-  //         }
-  //       }
-
-  //       return {
-  //         message: 'Grade upload completed',
-  //         summary: {
-  //           total: data.length,
-  //           successful: successCount,
-  //           failed: errorCount
-  //         },
-  //         errors: errors.length > 0 ? errors : undefined
-  //       };
-  //     });
-  //   } catch (error) {
-  //     console.error('Transaction failed:', error);
-
-  //     if (error instanceof ConflictException) {
-  //       throw error;
-  //     }
-
-  //     throw new InternalServerErrorException('Failed to create grade records');
-  //   }
-  // }
 
   async viewUncachedResults(data: gradeReultsRequest): Promise<StudentMarksDto> {
     try {
@@ -320,17 +211,13 @@ export class GradesService {
     const cacheKey = `student:${student_number}:${date_of_birth}`;
 
     try {
+
       const val = await this.redis.get('debug_key');
       const cached = await this.redis.get<StudentMarksDto>(cacheKey);
 
-
       if (cached) {
-        this.num=this.num+1
-        console.log(this.num)
-        
         return cached;
       }
-      console.log("not cached");
       const results = await sql`
       SELECT * FROM grades
       WHERE date_of_birth = ${date_of_birth} 
@@ -383,16 +270,85 @@ export class GradesService {
     }
   }
 
-  // Optional: clear Redis cache after a new upload
+
+async preLoadResultsFromDbToCache() {
+  try {
+    const BATCH_SIZE = 1000;
+    let lastId = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const grades = await sql`
+        SELECT *
+        FROM grades
+        WHERE id > ${lastId}
+        ORDER BY id
+        LIMIT ${BATCH_SIZE}
+      `;
+
+      if (grades.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      await Promise.all(
+        grades.map((grade) => {
+          const normalizedDob =
+            grade.date_of_birth instanceof Date
+              ? grade.date_of_birth.toISOString().split('T')[0]
+              : String(grade.date_of_birth).split('T')[0];
+
+          const cacheKey = `student:${grade.student_number}:${normalizedDob}`;
+
+
+          const preparedGrade: StudentMarksDto = {
+            first_name: grade.first_name,
+            middle_name: grade.middle_name,
+            last_name: grade.last_name,
+            date_of_birth: grade.date_of_birth,
+            student_number: grade.student_number,
+            exam_center: grade.exam_center,
+            accounting: grade.accounting,
+            agriculture: grade.agriculture,
+            bible_knowledge: grade.bible_knowledge,
+            biology: grade.biology,
+            business_studies: grade.business_studies,
+            chemistry: grade.chemistry,
+            chichewa: grade.chichewa,
+            computer_studies: grade.computer_studies,
+            english: grade.english,
+            geography: grade.geography,
+            history: grade.history,
+            home_economics: grade.home_economics,
+            mathematics: grade.mathematics,
+            physics: grade.physics,
+            social_studies: grade.social_studies,
+            technical_drawing: grade.technical_drawing,
+          };
+
+          return this.redis.set(cacheKey, preparedGrade, 86400);
+        })
+      );
+
+      // move cursor forward
+      lastId = grades[grades.length - 1].id;
+    }
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+  // clear Redis cache after a new upload
   async clearCache(student_number: string, date_of_birth: string) {
     const key = `student:${student_number}:${date_of_birth}`;
     await this.redis.del(key);
   }
+
 }
 
 
 
-// Define the error type
 type ErrorEntry = {
   row: number;
   missing?: string[];
