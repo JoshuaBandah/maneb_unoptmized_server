@@ -79,7 +79,7 @@ export class GradesController {
   // grades/grades.controller.ts
   @Public()
   @Get('view-cached-results-que')
-  async viewUncachedResultsWithQueue(
+  async viewcachedResultsWithQueue(
     @Query() query: gradeReultsRequest,
     @Res() res: express.Response,
   ) {

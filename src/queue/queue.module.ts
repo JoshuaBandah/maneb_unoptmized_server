@@ -10,19 +10,22 @@ import { GradesModule } from '../grades/grades.module';
         BullModule.registerQueue({
             name: 'results-queue',
             limiter: {
-                max: 5000,        // Max 100 jobs per
-                duration: 5000,  // 5 second
+                max: 5000,        // Max 300 jobs per
+                duration: 1000,  // 1 second
             },
             defaultJobOptions: {
                 attempts: 3,           // Retry failed jobs 3 times
-                backoff: 5000,        // Wait 5 seconds between retries
-                timeout: 60000,       // 30 second job timeout
+                backoff: {
+                    type: 'exponential',
+                    delay: 3000,
+                },
+                timeout: 60000,       // 60 second job timeout
                 removeOnComplete: {
-                    age: 3600, // keep for 1 hour
+                    age: 300, // keep for 5 min
                 },
 
                 removeOnFail: {
-                    age: 3600, // keep failed jobs for 24 hours
+                    age: 300, 
                 },
             },
         }),

@@ -10,7 +10,7 @@ import { RedisService } from '../redis/redis.service';
 export class GradesService {
   constructor(private readonly redis: RedisService) { }
 
-
+  private num:number=1;
   async createGradesFromFile(data: StudentMarksDto[]) {
     if (!data || data.length === 0) {
       throw new BadRequestException('No data provided');
@@ -316,6 +316,7 @@ export class GradesService {
   async viewCachedResults(data: gradeReultsRequest): Promise<StudentMarksDto> {
     const { date_of_birth, student_number } = data;
 
+
     const cacheKey = `student:${student_number}:${date_of_birth}`;
 
     try {
@@ -324,8 +325,12 @@ export class GradesService {
 
 
       if (cached) {
+        this.num=this.num+1
+        console.log(this.num)
+        
         return cached;
       }
+      console.log("not cached");
       const results = await sql`
       SELECT * FROM grades
       WHERE date_of_birth = ${date_of_birth} 

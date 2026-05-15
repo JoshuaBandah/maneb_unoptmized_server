@@ -1,4 +1,4 @@
-import {  Reflector } from '@nestjs/core'; // ← Import Reflector
+import { Reflector } from '@nestjs/core'; // ← Import Reflector
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthenticationModule } from './authentication/authentication.module';
@@ -14,8 +14,8 @@ import { BullModule } from '@nestjs/bull';
 import { QueueModule } from './queue/queue.module';
 @Module({
   imports: [
-    AuthenticationModule, 
-    UserModule, 
+    AuthenticationModule,
+    UserModule,
     GradesModule,
     PrometheusModule.register({
       path: "/metrics",
@@ -30,20 +30,7 @@ import { QueueModule } from './queue/queue.module';
         port: 6379,
       },
     }),
-    BullModule.registerQueue({
-      name: 'results-queue',
-      limiter: {
-        max: 200,
-        duration: 1000,  // 1 second
-      },
-      defaultJobOptions: {
-        attempts: 2,           // Retry failed jobs 3 times
-        backoff: 6000,        // Wait 1 second between retries
-        timeout: 60000,       // 60 second job timeout
-        removeOnComplete: 1000,// keep latest 1000 completed jobs
-        removeOnFail: 100, // keep latest 100 failed jobs
-      },
-    }),
+  
     QueueModule,
   ],
   controllers: [AppController],

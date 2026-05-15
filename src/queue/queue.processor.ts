@@ -13,6 +13,7 @@ export class ResultsQueueProcessor {
     const { student_number, date_of_birth } = job.data as gradeReultsRequest;
     
     
+
     // Validate required fields
     if (!student_number || !date_of_birth) {
       console.error(`Missing required fields for job ${job.id}:`, { student_number, date_of_birth });
@@ -21,12 +22,12 @@ export class ResultsQueueProcessor {
     
     try {
       // Process the actual request
-      const result = await this.gradesService.viewUncachedResults({
+      const result = await this.gradesService.viewCachedResults({
         student_number, 
         date_of_birth
       });
-      
-      // Update job progress
+
+
       await job.progress(100);
       
       
