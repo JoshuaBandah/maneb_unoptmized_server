@@ -13,7 +13,7 @@ import express from 'express';
 @Controller('grades')
 export class GradesController {
   constructor(private readonly gradesService: GradesService, private readonly queueProducer: ResultsQueueProducer) { }
-  private num:number=1;
+
   @Post('upload-grades')
   @UseInterceptors(FileInterceptor('grades'))
   async uploadExcel(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
@@ -83,8 +83,6 @@ export class GradesController {
     @Query() query: gradeReultsRequest,
     @Res() res: express.Response,
   ) {
-    console.log(this.num);
-    this.num=this.num+1;
     try {
       const { jobId, queued, position } = await this.queueProducer.addToQueue(
         query.student_number,
