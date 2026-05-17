@@ -9,6 +9,7 @@ import { Public } from '../common/decorators/public.decorator';
 import { query } from 'winston';
 import { ResultsQueueProducer } from '../queue/queue.producer';
 import express from 'express';
+import 'multer';
 
 @Controller('grades')
 export class GradesController {
@@ -89,6 +90,7 @@ export class GradesController {
         query.date_of_birth,
       );
 
+      console.log(process.pid);
       res.status(202).json({
         success: true,
         message: 'Request queued for processing',
@@ -122,7 +124,7 @@ export class GradesController {
   @Public()
   @Get('queue/status/:jobId')
   async getJobStatus(@Param('jobId') jobId: string) {
-    
+
     // console.log(`Worker ${process.pid} handled request`);
     const job = await this.queueProducer.getJob(jobId);
 
