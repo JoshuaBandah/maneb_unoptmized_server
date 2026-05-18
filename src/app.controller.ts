@@ -9,7 +9,6 @@ export class AppController {
   @Public()
   @Get()
   getHello(): string {
-    console.log(`Worker ${process.pid} handled request`);
     return this.appService.getHello();
   }
 }
